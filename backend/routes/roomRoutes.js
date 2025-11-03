@@ -19,6 +19,7 @@ const {
     deleteRoom,
     getPendingRooms
 } = require("../controllers/roomController");
+const { protect } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -36,7 +37,8 @@ router.get("/:chatId/pending", getPendingMembers);
 router.get("/pendingRooms/:userId", getPendingRooms);
 router.get("/:chatId/isMember/:userId", isMember)
 
-router.post("/", createRoom);
+// Use auth middleware so we can derive the user id server-side from the JWT
+router.post("/", protect, createRoom);
 router.post("/:chatId/request", requestJoin);
 
 router.put("/:chatId", updateRoomData);

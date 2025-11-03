@@ -8,9 +8,11 @@ const { checkAdmin, getUser } = require('../utils/helper');
 const createRoom = async (req, res) => {
     try {
         const { name, description, adminId, avatarColor, avatarText, lastMessage } = req.body;
+        // Prefer authenticated user from JWT if available; fallback to provided adminId
+        const effectiveAdminId = (req.user && req.user.id) ? req.user.id : adminId;
         console.log('createRoom called with:', { name, description, adminId, avatarColor, avatarText, lastMessage });
 
-        if (!adminId) {
+        if (!effectiveAdminId) {
             return res.status(400).json({ error: "admin_id is required."})
         }
 
@@ -23,7 +25,7 @@ const createRoom = async (req, res) => {
         }
 
         // Check if admin user exists
-        const admin = await prisma.user.findUnique({ where: { id: adminId } });
+        const admin = await prisma.user.findUnique({ where: { id: effectiveAdminId } });
         if (!admin) {
             console.warn('createRoom: admin not found:', adminId);
             return res.status(400).json({ error: 'Admin user not found' });
@@ -40,14 +42,14 @@ const createRoom = async (req, res) => {
                 avatar_color: avatarColor,
                 avatar_text: avatarText,
                 last_message: lastMessage || "",
-                admin: { connect: { id: adminId } }
+                admin: { connect: { id: effectiveAdminId } }
             }
         });
         console.log('Chatroom created:', chatroom);
 
         await prisma.chatRoomMember.create({
             data: {
-                user_id: adminId,
+                user_id: effectiveAdminId,
                 chat_id: id,
                 status: MemberStatus.APPROVED
             }
@@ -56,7 +58,7 @@ const createRoom = async (req, res) => {
 
         await prisma.chatRoomRead.create({
             data: {
-                user_id: adminId,
+                user_id: effectiveAdminId,
                 chat_id: id,
                 unread: true
             }
