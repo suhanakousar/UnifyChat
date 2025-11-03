@@ -13,11 +13,40 @@ const messageRoutes = require("./routes/messageRoutes");
 const translate = require("./controllers/transController");
 const app = express();
 
-const corsOptions = {
-  origin: "http://localhost:5173",
+// allowed origins — add any production host(s) here
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://unify-chat-cmyl.vercel.app',
+  'https://unifychat-2.onrender.com' // optional if frontend served there
+];
+
+app.use(cors({
+  origin: function(origin, callback){
+    // allow requests with no origin (like curl/postman)
+    if(!origin) return callback(null, true);
+    if(allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('CORS policy: origin not allowed'), false);
+    }
+  },
   credentials: true,
-};
-app.use(cors(corsOptions));
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Preflight handling (optional but reliable)
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
+// if you want to log the origin for debugging:
+app.use((req, res, next) => {
+  console.log('Request origin:', req.headers.origin, 'Path:', req.path);
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
