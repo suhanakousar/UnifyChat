@@ -16,7 +16,7 @@ const envVars = {
   VITE_TRANS_KEY: 'uhhjfxr3FiYaJiQVJLMyUWxzlNyf7C2ap4RlLmLUS2snl07YWyXpJQQJ99BJACGhslBXJ3w3AAAEACOG04n0',
   VITE_TRANS_REGION: 'centralindia',
   VITE_SPEECH_REGION: 'centralindia',
-  VITE_API_BASE_URL: 'http://localhost:3000'
+  VITE_API_BASE_URL: 'https://unifychat-2.onrender.com'
 };
 
 const envPath = path.join(__dirname, '.env');
