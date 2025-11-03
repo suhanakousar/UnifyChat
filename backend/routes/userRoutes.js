@@ -1,10 +1,17 @@
 const express = require('express');
 const passport = require('../controllers/passController');
+const jwt = require('jsonwebtoken');
 
 const { googleLogin } = require('../controllers/googleControler');
 const authController = require('./../controllers/authController');
 const userController = require('./../controllers/userController');
 const router = express.Router();
+
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
 
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
@@ -33,8 +40,11 @@ router.get(
           return res.status(500).send('Login error — check server logs.');
         }
         console.log('Login successful, redirecting to frontend');
-        const redirectUrl = `${process.env.FRONTEND_URL || 'https://unify-chat-h81q.vercel.app'}/`;
-        console.log('Redirecting to:', redirectUrl);
+        // Generate JWT token for the user
+        const token = signToken(user.id);
+        // Redirect to frontend with token as query param
+        const redirectUrl = `${process.env.FRONTEND_URL || 'https://unify-chat-h81q.vercel.app'}/?token=${token}`;
+        console.log('Redirecting to frontend with token:', redirectUrl);
         return res.redirect(redirectUrl);
       });
     })(req, res, next);
