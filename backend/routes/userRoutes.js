@@ -14,27 +14,30 @@ router.get(
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-router.get('/auth/google/callback', (req, res, next) => {
-  console.log('/auth/google/callback hit. query:', req.query);
-  passport.authenticate('google', (err, user, info) => {
-    if (err) {
-      console.error('passport.authenticate error:', err);
-      return res.status(500).send('Authentication error — check server logs.');
-    }
-    if (!user) {
-      console.warn('No user returned from passport; info:', info);
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
-    }
-    req.logIn(user, (loginErr) => {
-      if (loginErr) {
-        console.error('req.logIn error:', loginErr);
-        return res.status(500).send('Login error — check server logs.');
+router.get(
+  '/google/callback',
+  (req, res, next) => {
+    console.log('/auth/google/callback hit. query:', req.query);
+    passport.authenticate('google', (err, user, info) => {
+      if (err) {
+        console.error('passport.authenticate error:', err);
+        return res.status(500).send('Authentication error — check server logs.');
       }
-      console.log('Login successful, redirecting to frontend');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/`);
-    });
-  })(req, res, next);
-});
+      if (!user) {
+        console.warn('No user returned from passport; info:', info);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error('req.logIn error:', loginErr);
+          return res.status(500).send('Login error — check server logs.');
+        }
+        console.log('Login successful, redirecting to frontend');
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/`);
+      });
+    })(req, res, next);
+  }
+);
 
 router.get('/google/fail', (req, res) => {
   res.status(401).json({ message: 'Google authentication failed' });
