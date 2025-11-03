@@ -14,6 +14,6 @@
 - Commit changes and redeploy on Render.
 
 ## Step 5: Test Preflight and OAuth ✅
-- Use curl to test OPTIONS request. ✅ (CORS headers present, origin now correctly set to https://unify-chat-cmyl.vercel.app)
+- Use curl to test OPTIONS request. ✅ (CORS headers present, origin now correctly set to https://unify-chat-h81q.vercel.app)
 - Verify GET /auth/google route is reachable and initiates OAuth. ✅ (302 redirect to Google OAuth)
 - Test Google sign-in from frontend.

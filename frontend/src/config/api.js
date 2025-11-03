@@ -1,5 +1,10 @@
 // API configuration
 const getApiBaseUrl = () => {
+  // Check if running in production
+  if (import.meta.env.MODE === 'production') {
+    return 'https://unifychat-2.onrender.com';
+  }
+
   // Check if running in Replit environment
   if (typeof window !== 'undefined' && window.location.hostname.includes('replit')) {
     // Use same origin for Replit (backend on port 3000, but accessed through proxy)

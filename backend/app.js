@@ -14,7 +14,7 @@ const translate = require("./controllers/transController");
 const app = express();
 
 // Read allowed origins from an environment variable (comma-separated), with defaults for local dev
-const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000';
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000,https://unify-chat-h81q.vercel.app,https://unifychat-2.onrender.com';
 const allowedOrigins = allowedOriginsEnv.split(',').map(s => s.trim()).filter(Boolean);
 
 console.log('CORS allowed origins:', allowedOrigins);
