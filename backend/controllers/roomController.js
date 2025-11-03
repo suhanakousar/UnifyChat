@@ -8,6 +8,7 @@ const { checkAdmin, getUser } = require('../utils/helper');
 const createRoom = async (req, res) => {
     try {
         const { name, description, adminId, avatarColor, avatarText, lastMessage } = req.body;
+        console.log('createRoom called with:', { name, description, adminId, avatarColor, avatarText, lastMessage });
 
         if (!adminId) {
             return res.status(400).json({ error: "admin_id is required."})
@@ -22,6 +23,7 @@ const createRoom = async (req, res) => {
         }
 
         const id = uuidv4();
+        console.log('Generated chatroom id:', id);
 
         const chatroom = await prisma.chatRoom.create({
             data: {
@@ -36,6 +38,7 @@ const createRoom = async (req, res) => {
                 last_message: lastMessage
             }
         });
+        console.log('Chatroom created:', chatroom);
 
         await prisma.chatRoomMember.create({
             data: {
@@ -44,6 +47,7 @@ const createRoom = async (req, res) => {
                 status: MemberStatus.APPROVED
             }
         });
+        console.log('ChatRoomMember created for admin');
 
         await prisma.chatRoomRead.create({
             data: {
@@ -51,12 +55,14 @@ const createRoom = async (req, res) => {
                 chat_id: id,
                 unread: true
             }
-        })
-        
+        });
+        console.log('ChatRoomRead created for admin');
+
         return res.status(201).json({ message: "Chat room created successfully.", chatroom });
     }
     catch (err) {
-        console.error("Error creating chat room: ", err.message);
+        console.error("Error creating chat room:", err.message);
+        console.error("Full error:", err);
         return res.status(500).json({ error: "Internal server error."});
     }
 }
