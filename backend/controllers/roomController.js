@@ -22,6 +22,13 @@ const createRoom = async (req, res) => {
             return res.status(400).json({ error: "Chat room avatar color and text is required."})
         }
 
+        // Check if admin user exists
+        const admin = await prisma.user.findUnique({ where: { id: adminId } });
+        if (!admin) {
+            console.warn('createRoom: admin not found:', adminId);
+            return res.status(400).json({ error: 'Admin user not found' });
+        }
+
         const id = uuidv4();
         console.log('Generated chatroom id:', id);
 
@@ -30,12 +37,10 @@ const createRoom = async (req, res) => {
                 id,
                 name,
                 description,
-                admin_id: adminId,
-                created_at: new Date(),
-                updated_at: new Date(),
                 avatar_color: avatarColor,
                 avatar_text: avatarText,
-                last_message: lastMessage
+                last_message: lastMessage || "",
+                admin: { connect: { id: adminId } }
             }
         });
         console.log('Chatroom created:', chatroom);
