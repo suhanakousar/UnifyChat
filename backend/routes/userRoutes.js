@@ -33,7 +33,9 @@ router.get(
           return res.status(500).send('Login error — check server logs.');
         }
         console.log('Login successful, redirecting to frontend');
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/`);
+        const redirectUrl = `${process.env.FRONTEND_URL || 'https://unify-chat-h81q.vercel.app'}/`;
+        console.log('Redirecting to:', redirectUrl);
+        return res.redirect(redirectUrl);
       });
     })(req, res, next);
   }
