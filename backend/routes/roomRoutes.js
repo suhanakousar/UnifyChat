@@ -35,11 +35,11 @@ router.get("/:chatId/readStatus/:userId", getReadStatus);
 router.get("/:chatId/members", getMembers);
 router.get("/:chatId/pending", getPendingMembers);
 router.get("/pendingRooms/:userId", getPendingRooms);
-router.get("/:chatId/isMember/:userId", isMember)
+router.get("/:chatId/isMember/:userId", protect, isMember)
 
 // Use auth middleware so we can derive the user id server-side from the JWT
 router.post("/", protect, createRoom);
-router.post("/:chatId/request", requestJoin);
+router.post("/:chatId/request", protect, requestJoin);
 
 router.put("/:chatId", updateRoomData);
 router.put("/:chatId/readStatus/:userId", updateReadStatus);

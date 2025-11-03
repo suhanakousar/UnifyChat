@@ -161,10 +161,11 @@ const requestJoin = async (req, res) => {
     try {
         const { chatId } =  req.params;
         const { userId } = req.body;
+        const effectiveUserId = (req.user && req.user.id) ? req.user.id : userId;
 
         const requested = await prisma.chatRoomMember.findFirst({
             where: { 
-                user_id: userId,
+                user_id: effectiveUserId,
                 chat_id: chatId,
                 status: MemberStatus.PENDING
             }
@@ -173,14 +174,14 @@ const requestJoin = async (req, res) => {
         if (requested == null) {
             await prisma.chatRoomMember.create({
                 data: { 
-                    user_id: userId,
+                    user_id: effectiveUserId,
                     chat_id: chatId,
                     status: MemberStatus.PENDING
                 }
             })
-            return res.json({ message: "Join request sent from " + userId })
+            return res.json({ message: "Join request sent from " + effectiveUserId })
         }
-        return res.json({ message: userId + " already sent request to join."})
+        return res.json({ message: effectiveUserId + " already sent request to join."})
     }
     catch (err) {
         console.error("Error requesting to join:", err.message);
@@ -540,6 +541,7 @@ const changeAdmin = async (req, res) => {
 const isMember = async (req, res) => {
     try {
         const { chatId, userId } = req.params;
+        const effectiveUserId = (req.user && req.user.id) ? req.user.id : userId;
         
         // First, get the chatroom
         const chatroom = await prisma.chatRoom.findUnique({
@@ -565,7 +567,7 @@ const isMember = async (req, res) => {
         const findMem = await prisma.chatRoomMember.findFirst({
             where: {
                 chat_id: chatId,
-                user_id: userId,
+                user_id: effectiveUserId,
                 status: 'approved'
             }
         });
@@ -578,7 +580,7 @@ const isMember = async (req, res) => {
             const pendingMem = await prisma.chatRoomMember.findFirst({
                 where: {
                     chat_id: chatId,
-                    user_id: userId,
+                    user_id: effectiveUserId,
                     status: 'pending'
                 }
             });
