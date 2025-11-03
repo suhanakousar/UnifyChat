@@ -170,6 +170,7 @@ const Signin = () => {
           <div className="space-y-4">
             <div className="flex justify-center p-4 bg-white dark:bg-slate-800 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700">
               <GoogleLogin
+                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleFailure}
                 useOneTap
