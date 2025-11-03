@@ -13,34 +13,44 @@ const messageRoutes = require("./routes/messageRoutes");
 const translate = require("./controllers/transController");
 const app = express();
 
-// allowed origins — add any production host(s) here
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://unify-chat-cmyl.vercel.app',
-  'https://unifychat-2.onrender.com' // optional if frontend served there
-];
+// Read allowed origins from an environment variable (comma-separated), with defaults for local dev
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000';
+const allowedOrigins = allowedOriginsEnv.split(',').map(s => s.trim()).filter(Boolean);
 
-app.use(cors({
-  origin: function(origin, callback){
-    // allow requests with no origin (like curl/postman)
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) !== -1) {
+console.log('CORS allowed origins:', allowedOrigins);
+
+const corsOptions = {
+  origin: function(origin, callback) {
+    // allow requests with no origin (like curl or same-origin requests)
+    if (!origin) {
+      // No Origin header (server-to-server or same-origin), allow
       return callback(null, true);
-    } else {
-      return callback(new Error('CORS policy: origin not allowed'), false);
     }
+
+    // Debug log to help with failing origins
+    console.log('CORS check origin:', origin);
+
+    if (allowedOrigins.includes(origin)) {
+      // origin allowed
+      return callback(null, true);
+    }
+
+    // origin not allowed -> do NOT throw an Error (that causes a 500).
+    // Instead instruct CORS middleware to disallow by returning false.
+    // The browser will block the request client-side.
+    console.warn('CORS policy: origin not allowed:', origin);
+    return callback(null, false);
   },
   credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+};
 
-// Preflight handling (optional but reliable)
-app.options('*', cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Also ensure preflight OPTIONS are handled using the same options
+app.options('*', cors(corsOptions));
 
 // if you want to log the origin for debugging:
 app.use((req, res, next) => {
