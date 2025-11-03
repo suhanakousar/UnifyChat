@@ -1,4 +1,3 @@
-import { GoogleLogin } from "@react-oauth/google";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
@@ -46,36 +45,8 @@ const Signin = () => {
     }
   };
 
-  const handleGoogleSuccess = async (response) => {
-    try {
-      setLoading(true);
-      const googleData = { token: response.credential };
-      const result = await axios.post(
-        `${API_BASE_URL}/auth/google`,
-        googleData,
-        {
-          withCredentials: true,
-        }
-      );
-      if (result.data.status === "success") {
-        showToastSuccess("Login successful");
-        localStorage.setItem('user_id', result.data.user?.id)
-        login(result.data?.token);
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirect = urlParams.get('redirect');
-        navigate(redirect || "/");
-      }
-    } catch (err) {
-      console.error("Error during Google login:", err);
-      showToastError("Google login failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleFailure = (error) => {
-    showToastError("Google authentication failed");
-    console.error("Google authentication error:", error);
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (
@@ -169,15 +140,13 @@ const Signin = () => {
           {/* Google Sign In */}
           <div className="space-y-4">
             <div className="flex justify-center p-4 bg-white dark:bg-slate-800 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700">
-              <GoogleLogin
-                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleFailure}
-                useOneTap
-                theme="outline"
-                size="large"
-                width="400"
-              />
+              <button
+                onClick={handleGoogleLogin}
+                className="flex items-center justify-center space-x-3 px-6 py-3 bg-white dark:bg-slate-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
+                <span className="text-neutral-700 dark:text-neutral-300 font-medium">Sign in with Google</span>
+              </button>
             </div>
 
             <div className="relative">
