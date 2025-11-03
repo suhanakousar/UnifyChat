@@ -18,7 +18,6 @@ import { RequireAuth } from "../auth/RequireAuth";
 export const Routes = () => {
 return (
         <BrowserRouter>
-        <AuthProvider>
                 <RouteComponent>
                 <Route path="/" element={<Home />} />
                 <Route path="/Home" element={<Home />} />
@@ -32,7 +31,6 @@ return (
                 <Route path="/Help" element={<Help />} />
                 <Route path="*" element={<Error />} />
                 </RouteComponent>
-        </AuthProvider>
         </BrowserRouter>
 );
 };

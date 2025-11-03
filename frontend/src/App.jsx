@@ -5,14 +5,14 @@ import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import { Routes } from "./routes/Routes";
 import CustomCursor from "./components/common/CustomCursor";
-import { useAuth } from "./context/authContext";
+import { AuthProvider, useAuth } from "./context/authContext";
 
 // Use environment variable or fallback to default
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ||
                   import.meta.env.REACT_APP_GOOGLE_CLIENT_ID ||
                   "339367030371-gk3isctlpt7cb810qf51e1siugd3g7le.apps.googleusercontent.com";
 
-const App = () => {
+const AppContent = () => {
   const { login } = useAuth();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const App = () => {
   }, [login]);
 
   return (
-    <GoogleOAuthProvider clientId={CLIENT_ID}>
+    <>
       <CustomCursor />
       <Routes />
       <ToastContainer
@@ -43,6 +43,16 @@ const App = () => {
         pauseOnHover
         theme="colored"
       />
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <GoogleOAuthProvider clientId={CLIENT_ID}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </GoogleOAuthProvider>
   );
 };
