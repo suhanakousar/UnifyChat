@@ -188,7 +188,7 @@ const ChatRoom = () => {
 
     try {
       const res = await api.get(
-        `/chatroom/${chatId}/isMember/${userId}`,
+        `/chatroom/${chatId}/isMember`,
         { signal }
       );
 
@@ -949,7 +949,7 @@ const ChatRoom = () => {
     try {
       // Check if user is already a member
       const membershipCheck = await api.get(
-        `/chatroom/${chatId}/isMember/${userId}`
+        `/chatroom/${chatId}/isMember`
       );
 
       if (membershipCheck.data.isMember) {

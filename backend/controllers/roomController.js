@@ -540,12 +540,8 @@ const changeAdmin = async (req, res) => {
 
 const isMember = async (req, res) => {
     try {
-        const { chatId, userId } = req.params;
-
-        // Security check: ensure user can only check their own membership
-        if (!req.user || req.user.id !== userId) {
-            return res.status(403).json({ error: "You can only check your own membership status" });
-        }
+        const { chatId } = req.params;
+        const userId = req.user.id;
 
         // Debug logging for auth issues
         console.log('isMember hit', new Date().toISOString(), 'cookie-present?', !!req.headers.cookie, 'user?', !!req.user, 'userId:', userId, 'chatId:', chatId);
