@@ -10,7 +10,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['js-big-decimal', 'vite']
+    exclude: ['js-big-decimal']
   },
   server: {
     proxy: {
