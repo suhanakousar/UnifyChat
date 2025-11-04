@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import { showToastError, showToastSuccess } from "../common/ShowToast";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -126,7 +127,7 @@ const ChatInfo = ({
       try {
         // fetch chat room info
         const response = await axios.get(
-          `http://localhost:3000/chatroom/${chatId}`
+          `${API_BASE_URL}/chatroom/${chatId}`
         );
         const chatRoom = response.data.chatRoom;
 
@@ -170,7 +171,7 @@ const ChatInfo = ({
   }, [chatId]);
 
   axios
-    .get(`http://localhost:3000/chatroom/${chatId}/admin/${userId}`)
+    .get(`${API_BASE_URL}/chatroom/${chatId}/admin/${userId}`)
     .then((response) => {
       const isAdmin = response.data?.isAdmin;
       setIsCurrentUserAdmin(isAdmin);
@@ -179,7 +180,7 @@ const ChatInfo = ({
   const handleLeaveGroup = async () => {
     try {
       await axios.delete(
-        `http://localhost:3000/chatroom/${chatId}/leave/${userId}`
+        `${API_BASE_URL}/chatroom/${chatId}/leave/${userId}`
       );
 
       showToastSuccess(`Left group successfully`);
@@ -203,7 +204,7 @@ const ChatInfo = ({
 
       if (action === "makeAdmin") {
         await axios.put(
-          `http://localhost:3000/chatroom/${chatId}/changeAdmin`,
+          `${API_BASE_URL}/chatroom/${chatId}/changeAdmin`,
           {
             newAdminId: userId,
           }
@@ -219,7 +220,7 @@ const ChatInfo = ({
         setIsCurrentUserAdmin(false);
       } else if (action === "removeMember") {
         await axios.delete(
-          `http://localhost:3000/chatroom/${chatId}/members/${userId}`
+          `${API_BASE_URL}/chatroom/${chatId}/members/${userId}`
         );
         setGroupData((prev) => ({
           ...prev,
@@ -247,7 +248,7 @@ const ChatInfo = ({
 
         // send backend accept request
         await axios.put(
-          `http://localhost:3000/chatroom/${chatId}/memberRequest`,
+          `${API_BASE_URL}/chatroom/${chatId}/memberRequest`,
           {
             userId: userId,
             status: "approved",
@@ -255,7 +256,7 @@ const ChatInfo = ({
         );
       } else {
         await axios.put(
-          `http://localhost:3000/chatroom/${chatId}/memberRequest`,
+          `${API_BASE_URL}/chatroom/${chatId}/memberRequest`,
           {
             userId: userId,
             status: "rejected",
@@ -302,7 +303,7 @@ const ChatInfo = ({
       }
 
       // update backend
-      await axios.put(`http://localhost:3000/chatroom/${chatId}`, {
+      await axios.put(`${API_BASE_URL}/chatroom/${chatId}`, {
         name: newGroupName,
       });
 
