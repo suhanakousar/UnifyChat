@@ -26,3 +26,26 @@
 
 ## Step 7: Fix Identified Issues ✅
 - Based on logs, apply fixes (e.g., envs, table names, session config).
+
+---
+
+# TODO: Fix Auth/Session Timing Issues and Race Conditions
+
+## Step 1: Update Axios Instance with Credentials ✅
+- Modify `frontend/src/config/api.js` to export axios instance with `withCredentials: true`.
+
+## Step 2: Update Socket.IO with Credentials ✅
+- Modify socket initialization in `frontend/src/pages/Room.jsx` to include `withCredentials: true`.
+
+## Step 3: Add Request Cancellation and Debouncing ✅
+- Add AbortController to cancel membership checks and message loads on room switch in `frontend/src/pages/Room.jsx`.
+- Implement debouncing for room switches to prevent rapid toggling.
+
+## Step 4: Add Loading States ✅
+- Add loading indicators for room transitions in `frontend/src/pages/Room.jsx`.
+
+## Step 5: Add Server-Side Logging ✅
+- Add logging to `isMember` in `backend/controllers/roomController.js` for debugging cookie/user presence.
+
+## Step 6: Test Locally
+- Run frontend and backend locally, check network for cookies, server logs for isMember.
