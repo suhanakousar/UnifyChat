@@ -542,10 +542,7 @@ const isMember = async (req, res) => {
     try {
         const { chatId, userId } = req.params;
         const effectiveUserId = (req.user && req.user.id) ? req.user.id : userId;
-
-        // Debug logging for auth issues
-        console.log('isMember hit', new Date().toISOString(), 'cookie-present?', !!req.headers.cookie, 'user?', !!req.user, 'effectiveUserId:', effectiveUserId, 'chatId:', chatId);
-
+        
         // First, get the chatroom
         const chatroom = await prisma.chatRoom.findUnique({
             where: { id: chatId },
@@ -589,9 +586,7 @@ const isMember = async (req, res) => {
             });
             status = pendingMem ? 'pending' : null;
         }
-
-        console.log('isMember result:', { isMember: isApprovedMember, status, chatId, userId: effectiveUserId });
-
+          
         return res.json({
             isMember: isApprovedMember,
             status: status,
