@@ -43,7 +43,7 @@ router.get(
         // Generate JWT token for the user
         const token = signToken(user.id);
         // Redirect to frontend with token as query param
-        const redirectUrl = `${process.env.FRONTEND_URL || 'https://unify-chat-h81q.vercel.app'}/?token=${token}`;
+        const redirectUrl = `${process.env.FRONTEND_URL || 'https://unify-chat1-lkam.vercel.app'}/?token=${token}`;
         console.log('Redirecting to frontend with token:', redirectUrl);
         return res.redirect(redirectUrl);
       });

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      external: ['vite']
+      external: ['vite'] // 'lodash/debounce' should NOT be here
     }
   },
   optimizeDeps: {

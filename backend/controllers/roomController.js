@@ -541,10 +541,14 @@ const changeAdmin = async (req, res) => {
 const isMember = async (req, res) => {
     try {
         const { chatId, userId } = req.params;
-        const effectiveUserId = (req.user && req.user.id) ? req.user.id : userId;
+
+        // Security check: ensure user can only check their own membership
+        if (!req.user || req.user.id !== userId) {
+            return res.status(403).json({ error: "You can only check your own membership status" });
+        }
 
         // Debug logging for auth issues
-        console.log('isMember hit', new Date().toISOString(), 'cookie-present?', !!req.headers.cookie, 'user?', !!req.user, 'effectiveUserId:', effectiveUserId, 'chatId:', chatId);
+        console.log('isMember hit', new Date().toISOString(), 'cookie-present?', !!req.headers.cookie, 'user?', !!req.user, 'userId:', userId, 'chatId:', chatId);
 
         // First, get the chatroom
         const chatroom = await prisma.chatRoom.findUnique({
@@ -570,7 +574,7 @@ const isMember = async (req, res) => {
         const findMem = await prisma.chatRoomMember.findFirst({
             where: {
                 chat_id: chatId,
-                user_id: effectiveUserId,
+                user_id: userId,
                 status: 'approved'
             }
         });
@@ -583,14 +587,14 @@ const isMember = async (req, res) => {
             const pendingMem = await prisma.chatRoomMember.findFirst({
                 where: {
                     chat_id: chatId,
-                    user_id: effectiveUserId,
+                    user_id: userId,
                     status: 'pending'
                 }
             });
             status = pendingMem ? 'pending' : null;
         }
 
-        console.log('isMember result:', { isMember: isApprovedMember, status, chatId, userId: effectiveUserId });
+        console.log('isMember result:', { isMember: isApprovedMember, status, chatId, userId });
 
         return res.json({
             isMember: isApprovedMember,
