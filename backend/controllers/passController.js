@@ -9,7 +9,16 @@ console.log('ENV CHECK: GOOGLE_CLIENT_SECRET?', !!process.env.GOOGLE_CLIENT_SECR
 console.log('ENV CHECK: FRONTEND_URL?', !!process.env.FRONTEND_URL);
 console.log('ENV CHECK: GOOGLE_CALLBACK_URL?', !!process.env.GOOGLE_CALLBACK_URL);
 
-const callbackURL = process.env.GOOGLE_CALLBACK_URL || `${process.env.FRONTEND_URL}/auth/google/callback`;
+// Explicitly use backend callback URL - Google will redirect here after OAuth
+// For production: use Render backend URL, for dev: use localhost
+const getBackendUrl = () => {
+  if (process.env.GOOGLE_CALLBACK_URL) return process.env.GOOGLE_CALLBACK_URL;
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://unifychat-2.onrender.com/auth/google/callback';
+  }
+  return 'http://localhost:3000/auth/google/callback';
+};
+const callbackURL = getBackendUrl();
 console.log('Using Google callbackURL:', callbackURL);
 
 passport.use(

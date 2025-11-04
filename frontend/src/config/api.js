@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
     const hostname = window.location.hostname;
     // If deployed (not localhost), use production backend
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return 'https://unifychat-2.onrender.com';
+    return 'https://unifychat-2.onrender.com';
     }
   }
 
