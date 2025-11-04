@@ -1,4 +1,6 @@
 // API configuration
+import axios from 'axios';
+
 const getApiBaseUrl = () => {
   // Priority 1: Use environment variable if provided (most reliable)
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -24,3 +26,15 @@ const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+// Axios instance with credentials enabled
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true, // Send cookies with requests
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  timeout: 15000
+});
+
+export default api;
