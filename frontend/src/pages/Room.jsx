@@ -213,7 +213,6 @@ const ChatRoom = () => {
 
           setInvitedChatDetails(invitedChat);
           setShowWaitingApproval(true);
-          navigate("/Chat");
         } else {
           showToastError("Chat room information not available");
           navigate("/Chat");
@@ -236,7 +235,6 @@ const ChatRoom = () => {
 
           setInvitedChatDetails(invitedChat);
           setShowJoinRequest(true);
-          navigate("/Chat");
         } else {
           showToastError("Chat room information not available");
           navigate("/Chat");
