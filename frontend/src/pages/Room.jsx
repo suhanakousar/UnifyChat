@@ -1127,7 +1127,7 @@ const ChatRoom = () => {
     if (!chatToDelete) return;
 
     try {
-      await api.delete(`/chatroom/${chatToDelete.id}`, {
+      await axios.delete(`${API_BASE_URL}/chatroom/${chatToDelete.id}`, {
         data: { userId: userId }
       });
       setChats((prev) => prev.filter((chat) => chat.id !== chatToDelete.id));
