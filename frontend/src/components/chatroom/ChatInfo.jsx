@@ -16,6 +16,7 @@ import {
 import { showToastError, showToastSuccess } from "../common/ShowToast";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/api";
+import { useAuth } from "../../context/authContext";
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -108,7 +109,8 @@ const ChatInfo = ({
   originalChats,
   setOriginalChats,
 }) => {
-  const userId = localStorage.getItem("user_id");
+  const { user } = useAuth();
+  const userId = user?.id || localStorage.getItem("user_id");
   const [language, setLanguage] = useState("English");
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
@@ -151,7 +153,7 @@ const ChatInfo = ({
             createdAt: chatRoom.created_at,
             description: chatRoom.description,
             adminId: chatRoom.admin_id,
-            inviteLink: `localhost:5173/Chat/${chatRoom.id}`,
+            inviteLink: `${window.location.origin}/Chat/${chatRoom.id}`,
             members: members,
             joinRequests: pendingMembers,
           };

@@ -15,6 +15,7 @@ import JoinViaLinkModal from "../components/chatroom/JoinViaLinkModal.jsx";
 import { useParams, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
 import { useMessagePersistence } from "../hooks/useMessagePersistence";
+import { useAuth } from "../context/authContext";
 
 const ChatRoom = () => {
   const EmptyState = () => {
@@ -133,8 +134,10 @@ const ChatRoom = () => {
 
   const { chatId: urlChatId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const userId = localStorage.getItem("user_id");
+  // Get userId from user object first, fallback to localStorage
+  const userId = user?.id || localStorage.getItem("user_id");
 
   // Instead of a single [messages], we store a dictionary: { [roomId]: [msg, msg, ...], ... }
   const [roomMessages, setRoomMessages] = useState({});
@@ -436,7 +439,14 @@ const ChatRoom = () => {
   };
 
   useEffect(() => {
-    fetchChats();
+    // Only fetch chats if userId is available
+    if (userId) {
+      fetchChats();
+    } else {
+      // If no userId, show error or redirect
+      console.warn("No userId available, cannot fetch chats");
+      showToastError("Please log in to view your chats");
+    }
   }, [userId, urlChatId, navigate]);
 
   // 2. Filter chats for sidebar
