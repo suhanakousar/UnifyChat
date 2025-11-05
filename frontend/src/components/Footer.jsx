@@ -11,16 +11,16 @@ export const Footer = () => {
       { name: "FAQ", href: "#faq" },
     ],
     company: [
-      { name: "About", href: "/about" },
-      { name: "Blog", href: "/blog" },
-      { name: "Careers", href: "/careers" },
+      { name: "About", href: "/#features" },
+      { name: "Blog", href: "/Help" },
+      { name: "Careers", href: "/Help" },
       { name: "Contact", href: "#contact" },
     ],
     legal: [
-      { name: "Privacy", href: "/privacy" },
-      { name: "Terms", href: "/terms" },
-      { name: "Security", href: "/security" },
-      { name: "Cookies", href: "/cookies" },
+      { name: "Privacy", href: "/Help" },
+      { name: "Terms", href: "/Help" },
+      { name: "Security", href: "/Help" },
+      { name: "Cookies", href: "/Help" },
     ],
   };
 
@@ -92,12 +92,21 @@ export const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-neutral-400 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith('#') || link.href.startsWith('/#') ? (
+                    <a
+                      href={link.href}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -109,12 +118,21 @@ export const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-neutral-400 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith('#') || link.href.startsWith('/#') ? (
+                    <a
+                      href={link.href}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

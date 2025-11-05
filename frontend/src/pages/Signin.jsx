@@ -216,7 +216,7 @@ const Signin = () => {
                 />
                 <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Remember me</span>
               </label>
-              <Link to="/forgot-password" className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+              <Link to="/Help" className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -241,7 +241,7 @@ const Signin = () => {
           <div className="text-center pt-4">
             <p className="text-neutral-600 dark:text-neutral-400">
               Don't have an account?{" "}
-              <Link to="/signup" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+              <Link to="/Signup" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                 Sign up
               </Link>
             </p>

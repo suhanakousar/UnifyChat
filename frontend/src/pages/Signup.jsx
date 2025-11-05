@@ -258,11 +258,11 @@ const Signup = () => {
               />
               <label className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">
                 I agree to the{" "}
-                <Link to="/terms" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+                <Link to="/Help" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+                <Link to="/Help" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                   Privacy Policy
                 </Link>
               </label>
@@ -291,7 +291,7 @@ const Signup = () => {
           <div className="text-center pt-4">
             <p className="text-neutral-600 dark:text-neutral-400">
               Already have an account?{" "}
-              <Link to="/signin" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
+              <Link to="/Signin" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                 Sign in
               </Link>
             </p>

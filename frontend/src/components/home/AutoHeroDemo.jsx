@@ -226,7 +226,7 @@ const AutoHeroDemo = () => {
         <div className="max-w-4xl mx-auto text-center mb-12">
           {/* Hero headline with rotating welcome word */}
           <h1 className="text-3xl md:text-5xl font-bold mb-6">
-            <RotatingWord /> to Translation
+            <RotatingWord /> to UnifyChat
           </h1>
 
           {/* Main tagline */}
@@ -240,13 +240,13 @@ const AutoHeroDemo = () => {
           {/* Main CTA buttons */}
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
             <a 
-              href="#get-started" 
+              href="/Signup" 
               className="px-8 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-bold text-lg transition-colors shadow-lg hover:shadow-xl"
             >
               Get Started Free
             </a>
             <a 
-              href="#learn-more" 
+              href="#features" 
               className="px-8 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-lg transition-colors border border-primary-400/30 hover:border-primary-400/60"
             >
               Learn More

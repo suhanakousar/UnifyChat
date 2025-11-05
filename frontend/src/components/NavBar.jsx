@@ -5,7 +5,7 @@ import { sections } from "../constants/index.js";
 import { useAuth } from "../context/authContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { Button } from "./ui";
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaSearch, FaSun, FaMoon } from "react-icons/fa";
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaSun, FaMoon, FaLinkedin, FaGithub } from "react-icons/fa";
 
 const NavBar = () => {
   const pathname = window.location.pathname;
@@ -68,8 +68,8 @@ const NavBar = () => {
                 window.scrollTo(0, 0);
               }}
             >
-              <img src={logo} alt="Chatlas" className="h-10 w-10" />
-              <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 font-['Montserrat']">Chat</span>
+              <img src={logo} alt="UnifyChat" className="h-10 w-10" />
+              <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 font-['Montserrat']">UnifyChat</span>
             </Link>
           )}
 
@@ -97,13 +97,27 @@ const NavBar = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Search Icon */}
-            <button 
-              className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-800 transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 hover:scale-110"
-              aria-label="Search"
+            {/* LinkedIn Icon */}
+            <a
+              href="https://www.linkedin.com/in/suhanakousar/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-800 transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-110"
+              aria-label="LinkedIn"
             >
-              <FaSearch size={18} />
-            </button>
+              <FaLinkedin size={18} />
+            </a>
+
+            {/* GitHub Icon */}
+            <a
+              href="https://github.com/suhanakousar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-800 transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-gray-200 hover:scale-110"
+              aria-label="GitHub"
+            >
+              <FaGithub size={18} />
+            </a>
 
             {/* Theme Toggle */}
             <button 

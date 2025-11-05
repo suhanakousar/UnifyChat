@@ -71,7 +71,7 @@ const Feature = () => {
   };
 
   return (
-    <div className="relative py-20 bg-white dark:bg-slate-900 transition-colors overflow-hidden">
+    <div id="features" className="relative py-20 bg-white dark:bg-slate-900 transition-colors overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 dark:bg-primary-500/5 rounded-full blur-3xl"></div>
@@ -166,10 +166,13 @@ const Feature = () => {
                     </div>
 
                     {/* CTA Button */}
-                    <button className={`group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r ${colorMap[feature.color].gradient} text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105`}>
+                    <a 
+                      href="#services" 
+                      className={`group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r ${colorMap[feature.color].gradient} text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105`}
+                    >
                       <span>Learn More</span>
                       <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </a>
                   </div>
 
                   {/* Right: Visual */}

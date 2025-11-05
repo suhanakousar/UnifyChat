@@ -59,7 +59,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="relative py-32 bg-gradient-to-br from-white via-neutral-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 overflow-hidden transition-colors">
+    <div id="contact" className="relative py-32 bg-gradient-to-br from-white via-neutral-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 overflow-hidden transition-colors">
       {/* Decorative background */}
       <div className="absolute inset-0 gradient-mesh opacity-20 dark:opacity-10"></div>
       <div className="absolute top-20 right-0 w-96 h-96 bg-primary-500/5 dark:bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>

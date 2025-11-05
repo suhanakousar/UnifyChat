@@ -1,4 +1,5 @@
 import React, { forwardRef } from "react";
+import { Link } from "react-router-dom";
 import { FaGlobe, FaComments, FaLanguage, FaBolt, FaCheckCircle } from "react-icons/fa";
 
 const Service = forwardRef((props, ref) => {
@@ -128,12 +129,12 @@ const Service = forwardRef((props, ref) => {
                 Start chatting in any language, instantly
               </p>
             </div>
-            <a
-              href="/Chat"
+            <Link
+              to="/Chat"
               className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-xl shadow-primary-500/30 whitespace-nowrap"
             >
               Start Chatting
-            </a>
+            </Link>
           </div>
         </div>
       </div>
