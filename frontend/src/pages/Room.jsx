@@ -367,6 +367,8 @@ const ChatRoom = () => {
       withCredentials: true, // Send cookies with socket connection
     });
 
+    console.log("Attempting Socket.IO connection with userId:", userId); // Add this line
+
     socketInstance.on("connect", () => {
       // Join current room if exists
       if (urlChatId) {

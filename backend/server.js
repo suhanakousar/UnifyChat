@@ -17,6 +17,7 @@ app.set("socketio", io);
 
 io.use((socket, next) => {
   const userId = socket.handshake.auth.userId;
+  console.log("Backend Socket.IO middleware - received userId:", userId); // Add this line
   socket.userId = userId;
   next();
 });
