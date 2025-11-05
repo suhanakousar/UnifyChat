@@ -155,9 +155,14 @@ const ChatRoom = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  // On mobile: show sidebar only if no chat is selected, hide if chat is selected
+  // On desktop: always show sidebar
+  const [showSidebar, setShowSidebar] = useState(() => {
+    const mobile = window.innerWidth < 768;
+    return mobile ? !urlChatId : true;
+  });
   const [showChatInfo, setShowChatInfo] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPrepending, setIsPrepending] = useState(false);
   const [messagePagination, setMessagePagination] = useState({}); // { [chatId]: { cursor, hasMore } }
 
@@ -898,7 +903,7 @@ const ChatRoom = () => {
       if (mobile) {
         setShowChatInfo(false);
         // On mobile: show sidebar if no chat selected, hide if chat is selected
-        if (currentChatId) {
+        if (currentChatId || urlChatId) {
           setShowSidebar(false);
         } else {
           setShowSidebar(true);
@@ -915,7 +920,18 @@ const ChatRoom = () => {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [currentChatId]);
+  }, [currentChatId, urlChatId]);
+
+  // Sync sidebar state with URL on mobile
+  useEffect(() => {
+    if (isMobile) {
+      if (urlChatId || currentChatId) {
+        setShowSidebar(false);
+      } else {
+        setShowSidebar(true);
+      }
+    }
+  }, [urlChatId, currentChatId, isMobile]);
 
   // 9. Toggles
   const toggleSidebar = () => {
@@ -928,11 +944,11 @@ const ChatRoom = () => {
         }
       } else {
         // If hiding sidebar, show chat list
-        setShowSidebar(true);
         if (currentChatId) {
-          navigate('/Chat');
           setCurrentChatId(null);
+          navigate('/Chat', { replace: true });
         }
+        setShowSidebar(true);
       }
     } else {
       setShowSidebar(!showSidebar);
@@ -943,9 +959,9 @@ const ChatRoom = () => {
   // Handle back to chat list on mobile
   const handleBackToChats = () => {
     if (isMobile) {
-      setShowSidebar(true);
       setCurrentChatId(null);
-      navigate('/Chat');
+      navigate('/Chat', { replace: true });
+      setShowSidebar(true);
     } else {
       setCurrentChatId(chats[0]?.id || null);
       navigate("/Chat");
