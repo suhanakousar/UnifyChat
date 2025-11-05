@@ -187,17 +187,37 @@ const ChatRoom = () => {
     const { signal } = membershipControllerRef.current;
 
     try {
-      const res = await api.get(
-        `/chatroom/${chatId}/isMember`,
-        { signal }
-      );
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/chatroom/${chatId}/isMember/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        signal // Pass the AbortController signal
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // If response is not JSON, or parsing fails
+        const error = new Error('Failed to parse response from server');
+        error.response = { status: response.status, data: { message: 'Invalid server response' } };
+        throw error;
+      }
+
+      if (!response.ok) {
+        const error = new Error(data.message || 'Failed to fetch membership status');
+        error.response = { status: response.status, data: data };
+        throw error;
+      }
 
       // Check membership status
-      if (res.data.isMember) {
+      if (data.isMember) {
         // User is a member, load the chat
         setCurrentChatId(chatId);
-      } else if (res.data.status === 'pending') {
-        const chatroom = res.data.chatroom;
+      } else if (data.status === 'pending') {
+        const chatroom = data.chatroom;
 
         if (chatroom) {
           const invitedChat = {
@@ -219,7 +239,7 @@ const ChatRoom = () => {
           navigate("/Chat");
         }
       } else {
-        const chatroom = res.data.chatroom;
+        const chatroom = data.chatroom;
 
         if (chatroom) {
           const invitedChat = {
@@ -948,11 +968,31 @@ const ChatRoom = () => {
   const handleJoinViaLink = async (chatId) => {
     try {
       // Check if user is already a member
-      const membershipCheck = await api.get(
-        `/chatroom/${chatId}/isMember`
-      );
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/chatroom/${chatId}/isMember/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (membershipCheck.data.isMember) {
+      let membershipCheckData;
+      try {
+        membershipCheckData = await response.json();
+      } catch (jsonError) {
+        const error = new Error('Failed to parse response from server');
+        error.response = { status: response.status, data: { message: 'Invalid server response' } };
+        throw error;
+      }
+
+      if (!response.ok) {
+        const error = new Error(membershipCheckData.message || 'Failed to fetch membership status');
+        error.response = { status: response.status, data: membershipCheckData };
+        throw error;
+      }
+
+      // Check if user is already a member
+      if (membershipCheckData.isMember) {
         // User is already a member, redirect to chat
         showToastSuccess("You're already a member of this chat");
         setCurrentChatId(chatId);
@@ -961,10 +1001,10 @@ const ChatRoom = () => {
         return;
       }
 
-      if (membershipCheck.data.status === 'pending') {
+      if (membershipCheckData.status === 'pending') {
         // Already requested, show waiting approval
         showToastError("You already have a pending request for this chat");
-        const chatroom = membershipCheck.data.chatroom;
+        const chatroom = membershipCheckData.chatroom;
         if (chatroom) {
           const invitedChat = {
             id: chatId,
