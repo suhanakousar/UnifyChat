@@ -163,6 +163,7 @@ const ChatWindow = ({
   const [language, setLanguage] = useState("en");
   const speechKey = import.meta.env.VITE_SPEECH_KEY;
   const speechRegion = import.meta.env.VITE_SPEECH_REGION;
+  const hasSpeechConfig = speechKey && speechRegion && speechKey.trim() !== '' && speechRegion.trim() !== '';
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const recognizerRef = useRef(null);
@@ -319,24 +320,35 @@ const ChatWindow = ({
     }
   };
   const handleSpeechToTextStart = () => {
-    const speechConfig = SpeechConfig.fromSubscription(speechKey, speechRegion);
-    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-    speechConfig.setProperty("speechServiceConnection_Language", "auto");
-    const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+    if (!hasSpeechConfig) {
+      console.warn('Speech-to-text is not configured. Please set VITE_SPEECH_KEY and VITE_SPEECH_REGION environment variables.');
+      return;
+    }
 
-    recognizerRef.current = recognizer;
-    setIsRecording(true);
+    try {
+      const speechConfig = SpeechConfig.fromSubscription(speechKey, speechRegion);
+      const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
+      speechConfig.setProperty("speechServiceConnection_Language", "auto");
+      const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
-    recognizer.startContinuousRecognitionAsync(
-      () => {},
-      (err) => {
-        setIsRecording(false);
-      }
-    );
+      recognizerRef.current = recognizer;
+      setIsRecording(true);
 
-    recognizer.recognizing = (s, e) => {
-      setNewMessage(e.result.text);
-    };
+      recognizer.startContinuousRecognitionAsync(
+        () => {},
+        (err) => {
+          console.error('Speech recognition error:', err);
+          setIsRecording(false);
+        }
+      );
+
+      recognizer.recognizing = (s, e) => {
+        setNewMessage(e.result.text);
+      };
+    } catch (error) {
+      console.error('Failed to initialize speech recognition:', error);
+      setIsRecording(false);
+    }
   };
 
   const handleSpeechToTextStop = () => {
@@ -685,19 +697,21 @@ const ChatWindow = ({
               </>
             )}
           </div>
-          <IconButton
-            icon={
-              isRecording ? (
-                <FaRegStopCircle className="text-red-500" />
-              ) : (
-                <FaMicrophone />
-              )
-            }
-            className={`flex-1 ${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5`}
-            onClick={
-              isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
-            }
-          />
+          {hasSpeechConfig && (
+            <IconButton
+              icon={
+                isRecording ? (
+                  <FaRegStopCircle className="text-red-500" />
+                ) : (
+                  <FaMicrophone />
+                )
+              }
+              className={`flex-1 ${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5`}
+              onClick={
+                isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
+              }
+            />
+          )}
         </div>
 
         {/* Desktop Action Buttons - Hidden on mobile */}
@@ -734,19 +748,21 @@ const ChatWindow = ({
               </>
             )}
           </div>
-          <IconButton
-            icon={
-              isRecording ? (
-                <FaRegStopCircle className="text-red-500" />
-              ) : (
-                <FaMicrophone />
-              )
-            }
-            className={`${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white`}
-            onClick={
-              isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
-            }
-          />
+          {hasSpeechConfig && (
+            <IconButton
+              icon={
+                isRecording ? (
+                  <FaRegStopCircle className="text-red-500" />
+                ) : (
+                  <FaMicrophone />
+                )
+              }
+              className={`${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white`}
+              onClick={
+                isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
+              }
+            />
+          )}
         </div>
 
         <div className="flex-1 mx-1 md:mx-2 min-w-0 w-full md:w-auto">
