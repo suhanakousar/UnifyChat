@@ -161,8 +161,9 @@ const ChatWindow = ({
   onDeleteMessage,
 }) => {
   const [language, setLanguage] = useState("en");
-  const speechKey = import.meta.env.VITE_SPEECH_KEY;
-  const speechRegion = import.meta.env.VITE_SPEECH_REGION;
+  // Try VITE_SPEECH_KEY first, fallback to VITE_TRANS_KEY if Speech key not set
+  const speechKey = import.meta.env.VITE_SPEECH_KEY || import.meta.env.VITE_TRANS_KEY;
+  const speechRegion = import.meta.env.VITE_SPEECH_REGION || import.meta.env.VITE_TRANS_REGION || 'centralindia';
   const hasSpeechConfig = speechKey && speechRegion && speechKey.trim() !== '' && speechRegion.trim() !== '';
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
