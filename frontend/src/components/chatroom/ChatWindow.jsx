@@ -420,7 +420,13 @@ const ChatWindow = ({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onBack || toggleSidebar}
+            onClick={() => {
+              if (onBack) {
+                onBack();
+              } else if (toggleSidebar) {
+                toggleSidebar();
+              }
+            }}
             className="mr-2 md:mr-3 p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-brand-grey-light text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-white transition-colors active:scale-95"
             title="Back to chats"
           >

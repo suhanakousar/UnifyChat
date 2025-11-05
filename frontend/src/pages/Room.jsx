@@ -17,6 +17,7 @@ import { API_BASE_URL } from "../config/api";
 import api from "../config/api";
 import { useMessagePersistence } from "../hooks/useMessagePersistence";
 import { useAuth } from "../context/authContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 import debounce from 'lodash/debounce';
 
@@ -156,6 +157,7 @@ const ChatRoom = () => {
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [showChatInfo, setShowChatInfo] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPrepending, setIsPrepending] = useState(false);
   const [messagePagination, setMessagePagination] = useState({}); // { [chatId]: { cursor, hasMore } }
 
@@ -512,10 +514,14 @@ const ChatRoom = () => {
       } else if (urlChatId) {
         // If urlChatId is specified, set it even if not in chats (for invite)
         setCurrentChatId(urlChatId);
-      } else if (newChats.length > 0) {
-        setCurrentChatId(newChats[0].id);
       } else {
-        setCurrentChatId(null);
+        // On mobile, don't auto-select first chat - show chat list instead
+        // On desktop, auto-select first chat if available
+        if (window.innerWidth >= 768 && newChats.length > 0) {
+          setCurrentChatId(newChats[0].id);
+        } else {
+          setCurrentChatId(null);
+        }
       }
     } catch (err) {
       showToastError(err.response?.data?.message || "Failed to load chats");
@@ -874,7 +880,7 @@ const ChatRoom = () => {
       socket.emit("joinRoom", chatId);
     }
 
-    // On mobile, hide sidebar after selecting
+    // On mobile, hide sidebar after selecting to show conversation
     if (window.innerWidth < 768) {
       setShowSidebar(false);
     }
@@ -883,13 +889,19 @@ const ChatRoom = () => {
     debouncedLoadRoom(chatId);
   }, [currentChatId, navigate, socket, isLoadingRoom, debouncedLoadRoom, chats]);
 
-  // 8. Handle resizing
+  // 8. Handle resizing and mobile view logic
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      if (mobile) {
         setShowChatInfo(false);
-        if (currentChatId && showSidebar) {
+        // On mobile: show sidebar if no chat selected, hide if chat is selected
+        if (currentChatId) {
           setShowSidebar(false);
+        } else {
+          setShowSidebar(true);
         }
       } else if (window.innerWidth < 1024) {
         setShowChatInfo(false);
@@ -906,8 +918,39 @@ const ChatRoom = () => {
   }, [currentChatId]);
 
   // 9. Toggles
-  const toggleSidebar = () => setShowSidebar(!showSidebar);
+  const toggleSidebar = () => {
+    if (isMobile) {
+      // On mobile, toggle sidebar and navigate accordingly
+      if (showSidebar) {
+        // If showing sidebar and we have a chat, go to chat
+        if (currentChatId) {
+          setShowSidebar(false);
+        }
+      } else {
+        // If hiding sidebar, show chat list
+        setShowSidebar(true);
+        if (currentChatId) {
+          navigate('/Chat');
+          setCurrentChatId(null);
+        }
+      }
+    } else {
+      setShowSidebar(!showSidebar);
+    }
+  };
   const toggleChatInfo = () => setShowChatInfo(!showChatInfo);
+  
+  // Handle back to chat list on mobile
+  const handleBackToChats = () => {
+    if (isMobile) {
+      setShowSidebar(true);
+      setCurrentChatId(null);
+      navigate('/Chat');
+    } else {
+      setCurrentChatId(chats[0]?.id || null);
+      navigate("/Chat");
+    }
+  };
 
   // 10. Lazy loading for messages
 
@@ -1061,11 +1104,6 @@ const ChatRoom = () => {
     }
   };
 
-  // 13. Handle back to chats
-  const handleBackToChats = () => {
-    setCurrentChatId(chats[0]?.id || null);
-    navigate("/Chat");
-  };
 
   // 13.5. Handle join via invite link
   const handleJoinViaLink = async (chatId) => {
@@ -1287,8 +1325,14 @@ const ChatRoom = () => {
   };
 
   const renderMainContent = () => {
-    if (!currentChatId || !urlChatId) {
+    // On mobile, don't show EmptyState - show sidebar with chat list instead
+    if ((!currentChatId || !urlChatId) && !isMobile) {
       return <EmptyState />;
+    }
+    
+    // On mobile with no chat, return null (sidebar will be shown)
+    if ((!currentChatId || !urlChatId) && isMobile) {
+      return null;
     }
 
     if (currentChat?.status === "pending") {
@@ -1326,10 +1370,7 @@ const ChatRoom = () => {
         onFileUpload={handleFileUpload}
         onImageUpload={handleImageUpload}
         isOnline={isOnline}
-        onBack={() => {
-          setCurrentChatId(null);
-          navigate('/Chat');
-        }}
+        onBack={handleBackToChats}
         onUserClick={(userId) => {
           setSelectedUserId(userId);
           setShowProfileModal(true);
@@ -1416,9 +1457,34 @@ const ChatRoom = () => {
   return (
     <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors overflow-hidden">
       <div className="flex flex-1 overflow-hidden relative">
-        {showSidebar && (
-          <div className="absolute md:relative inset-0 md:inset-auto z-50 md:z-auto">
-            <Sidebar
+        {/* Backdrop overlay for mobile sidebar */}
+        <AnimatePresence>
+          {showSidebar && isMobile && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => {
+                if (currentChatId) {
+                  setShowSidebar(false);
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
+        
+        <AnimatePresence>
+          {showSidebar && (
+            <motion.div 
+              initial={isMobile ? { x: '-100%' } : false}
+              animate={isMobile ? { x: 0 } : false}
+              exit={isMobile ? { x: '-100%' } : false}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="absolute md:relative inset-0 md:inset-auto z-50 md:z-auto"
+            >
+              <Sidebar
             chats={filteredChats}
             originalChats={chats}
             setOriginalChats={setChats}
@@ -1437,10 +1503,12 @@ const ChatRoom = () => {
             currentUserId={userId}
             chatAdmins={chatAdmins}
           />
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {renderMainContent()}
+        {/* Main content - show on mobile only when sidebar is hidden (chat selected) */}
+        {(!showSidebar || !isMobile) && renderMainContent()}
 
         {urlChatId &&
           showChatInfo &&
