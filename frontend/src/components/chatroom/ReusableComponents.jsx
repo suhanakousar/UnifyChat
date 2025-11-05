@@ -54,11 +54,12 @@ const AvatarPerson = ({ size = "md", person }) => {
   );
 };
 
-const IconButton = ({ icon, onClick, className = "" }) => {
+const IconButton = ({ icon, onClick, className = "", disabled = false }) => {
   return (
     <button
-      className={`p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-brand-grey-light transition duration-200 text-neutral-600 dark:text-neutral-400 ${className}`}
+      className={`p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-brand-grey-light transition duration-200 text-neutral-600 dark:text-neutral-400 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {icon}
     </button>

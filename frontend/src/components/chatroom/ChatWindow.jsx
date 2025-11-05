@@ -60,7 +60,7 @@ const MessageBubble = ({
           <AvatarPerson person={message?.sender} size="sm" />
         </div>
       )}
-      <div className="flex flex-col max-w-md">
+      <div className="flex flex-col max-w-[85%] md:max-w-md">
         {!isOwnMessage && (
           <div 
             className="font-['Inter'] text-xs text-neutral-600 dark:text-neutral-400 mb-1 cursor-pointer hover:text-brand-yellow dark:hover:text-brand-yellow-light transition-colors"
@@ -143,6 +143,7 @@ const ChatWindow = ({
   newMessage,
   setNewMessage,
   onSendMessage,
+  isSending = false,
   messageContainerRef,
   toggleSidebar,
   toggleChatInfo,
@@ -205,13 +206,15 @@ const ChatWindow = ({
   }, [currentChat, onLoadMoreMessages]);
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isSending) {
       e.preventDefault();
       handleSendClick();
     }
   };
   
   const handleSendClick = () => {
+    if (isSending || !newMessage.trim()) return;
+    
     if (replyingTo && onSendMessage) {
       onSendMessage(replyingTo);
       handleSetReplyingTo(null);
@@ -411,27 +414,19 @@ const ChatWindow = ({
         onClose={() => setShowSearch(false)}
       />
 
-      <div className="p-4 md:p-5 border-b border-neutral-200 dark:border-brand-grey-light bg-white dark:bg-brand-grey-medium flex items-center justify-between shadow-sm">
+      <div className="p-3 md:p-4 lg:p-5 border-b border-neutral-200 dark:border-brand-grey-light bg-white dark:bg-brand-grey-medium flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center flex-1 min-w-0">
-          {/* Back Button */}
-          {onBack && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onBack}
-              className="mr-3 p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-brand-grey-light text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-white transition-colors"
-              title="Back to chats"
-            >
-              <FaArrowLeft size={18} />
-            </motion.button>
-          )}
-          
-          <button
-            className="md:hidden mr-3 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            onClick={toggleSidebar}
+          {/* Back Button - Always visible on mobile */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onBack || toggleSidebar}
+            className="mr-2 md:mr-3 p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-brand-grey-light text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-white transition-colors active:scale-95"
+            title="Back to chats"
           >
-            <FaBars size={20} />
-          </button>
+            <FaArrowLeft size={18} className="md:hidden" />
+            <FaBars size={18} className="hidden md:block" />
+          </motion.button>
 
           <AvatarChat
             color={currentChat?.avatar_color}
@@ -476,7 +471,7 @@ const ChatWindow = ({
         </div>
       </div>
 
-      <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-neutral-50 dark:bg-brand-grey-dark" ref={messageContainerRef}>
+      <div className="flex-1 p-3 md:p-4 lg:p-6 overflow-y-auto bg-neutral-50 dark:bg-brand-grey-dark pb-safe" ref={messageContainerRef}>
         {translatedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-20 h-20 mb-4 rounded-full bg-brand-yellow/10 dark:bg-brand-yellow-light/10 flex items-center justify-center">
@@ -649,55 +644,108 @@ const ChatWindow = ({
         </div>
       )}
 
-      <div className="p-4 md:p-6 bg-white dark:bg-brand-grey-medium border-t border-neutral-200 dark:border-brand-grey-light flex items-center gap-2">
-        <IconButton
-          icon={<FaPaperclip />}
-          className="hidden sm:block text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
-          onClick={handleFileButtonClick}
-        />
-        <IconButton
-          icon={<FaImage />}
-          className="hidden sm:block text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
-          onClick={handleImageButtonClick}
-        />
-        <div className="relative">
+      <div className="p-3 md:p-4 lg:p-6 bg-white dark:bg-brand-grey-medium border-t border-neutral-200 dark:border-brand-grey-light flex flex-col md:flex-row items-end gap-2 pb-safe">
+        {/* Mobile Action Buttons Row - Shown on small screens */}
+        <div className="flex md:hidden items-center gap-2 w-full pb-2 border-b border-neutral-200 dark:border-brand-grey-light">
           <IconButton
-            icon={<FaSmile />}
-            className="hidden sm:block text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            icon={<FaPaperclip />}
+            className="flex-1 text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5"
+            onClick={handleFileButtonClick}
           />
-          {showEmojiPicker && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setShowEmojiPicker(false)}
-              />
-              <EmojiPicker
-                isOpen={showEmojiPicker}
-                onClose={() => setShowEmojiPicker(false)}
-                onSelectEmoji={(emoji) => {
-                  setNewMessage((prev) => prev + emoji);
-                }}
-              />
-            </>
-          )}
+          <IconButton
+            icon={<FaImage />}
+            className="flex-1 text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5"
+            onClick={handleImageButtonClick}
+          />
+          <div className="relative flex-1">
+            <IconButton
+              icon={<FaSmile />}
+              className="w-full text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            />
+            {showEmojiPicker && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowEmojiPicker(false)}
+                />
+                <EmojiPicker
+                  isOpen={showEmojiPicker}
+                  onClose={() => setShowEmojiPicker(false)}
+                  onSelectEmoji={(emoji) => {
+                    setNewMessage((prev) => prev + emoji);
+                  }}
+                />
+              </>
+            )}
+          </div>
+          <IconButton
+            icon={
+              isRecording ? (
+                <FaRegStopCircle className="text-red-500" />
+              ) : (
+                <FaMicrophone />
+              )
+            }
+            className={`flex-1 ${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white p-2.5`}
+            onClick={
+              isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
+            }
+          />
         </div>
-        <IconButton
-          icon={
-            isRecording ? (
-              <FaRegStopCircle className={isRecording ? "text-red-500" : ""} />
-            ) : (
-              <FaMicrophone />
-            )
-          }
-          className={`hidden sm:block ${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white`}
-          onClick={
-            isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
-          }
-        />
-        <div className="flex-1 mx-2 min-w-0">
+
+        {/* Desktop Action Buttons - Hidden on mobile */}
+        <div className="hidden md:flex items-center gap-2">
+          <IconButton
+            icon={<FaPaperclip />}
+            className="text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
+            onClick={handleFileButtonClick}
+          />
+          <IconButton
+            icon={<FaImage />}
+            className="text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
+            onClick={handleImageButtonClick}
+          />
+          <div className="relative">
+            <IconButton
+              icon={<FaSmile />}
+              className="text-neutral-600 dark:text-neutral-400 hover:text-brand-grey-dark dark:hover:text-brand-white"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            />
+            {showEmojiPicker && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowEmojiPicker(false)}
+                />
+                <EmojiPicker
+                  isOpen={showEmojiPicker}
+                  onClose={() => setShowEmojiPicker(false)}
+                  onSelectEmoji={(emoji) => {
+                    setNewMessage((prev) => prev + emoji);
+                  }}
+                />
+              </>
+            )}
+          </div>
+          <IconButton
+            icon={
+              isRecording ? (
+                <FaRegStopCircle className="text-red-500" />
+              ) : (
+                <FaMicrophone />
+              )
+            }
+            className={`${isRecording ? "text-red-500" : "text-neutral-600 dark:text-neutral-400"} hover:text-brand-grey-dark dark:hover:text-brand-white`}
+            onClick={
+              isRecording ? handleSpeechToTextStop : handleSpeechToTextStart
+            }
+          />
+        </div>
+
+        <div className="flex-1 mx-1 md:mx-2 min-w-0 w-full md:w-auto">
           <textarea
-            className="font-['Inter'] placeholder-neutral-400 dark:placeholder-neutral-500 border border-neutral-200 dark:border-brand-grey-light rounded-xl p-3 w-full resize-none bg-white dark:bg-brand-grey-light text-brand-grey-dark dark:text-brand-white focus:outline-none focus:ring-2 focus:ring-brand-yellow dark:focus:ring-brand-yellow-light transition-colors max-h-32"
+            className="font-['Inter'] placeholder-neutral-400 dark:placeholder-neutral-500 border border-neutral-200 dark:border-brand-grey-light rounded-xl p-3 w-full resize-none bg-white dark:bg-brand-grey-light text-brand-grey-dark dark:text-brand-white focus:outline-none focus:ring-2 focus:ring-brand-yellow dark:focus:ring-brand-yellow-light transition-colors max-h-32 text-base md:text-sm"
             placeholder="Type a message..."
             value={newMessage}
             onChange={handleInputChange}
@@ -707,8 +755,9 @@ const ChatWindow = ({
         </div>
         <IconButton
           icon={<FaPaperPlane className="text-brand-yellow dark:text-brand-yellow-light" />}
-          className="hover:bg-brand-yellow/10 dark:hover:bg-brand-yellow/20"
+          className={`hover:bg-brand-yellow/10 dark:hover:bg-brand-yellow/20 p-2.5 md:p-2 flex-shrink-0 ${isSending || !newMessage.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={handleSendClick}
+          disabled={isSending || !newMessage.trim()}
         />
       </div>
     </div>

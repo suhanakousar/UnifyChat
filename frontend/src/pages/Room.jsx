@@ -148,6 +148,7 @@ const ChatRoom = () => {
   const [currentChatId, setCurrentChatId] = useState(urlChatId);
   const [lastScrollChatId, setLastScrollChatId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   // UI states
   const [activeFilter, setActiveFilter] = useState("all");
@@ -176,7 +177,10 @@ const ChatRoom = () => {
   const membershipControllerRef = useRef(null);
 
   const checkMembership = useCallback(async (chatId) => {
-    if (!chatId) return;
+    if (!chatId || !userId) {
+      console.warn('checkMembership: Missing chatId or userId', { chatId, userId });
+      return;
+    }
 
     // Cancel previous request
     if (membershipControllerRef.current) {
@@ -188,26 +192,39 @@ const ChatRoom = () => {
 
     try {
       const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        showToastError("Please log in to access chats");
+        navigate("/Signin");
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/chatroom/${chatId}/isMember/${userId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         signal // Pass the AbortController signal
       });
 
       let data;
       try {
-        data = await response.json();
+        const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+        data = JSON.parse(text);
       } catch (jsonError) {
-        // If response is not JSON, or parsing fails
+        console.error('Failed to parse response:', jsonError, 'Response status:', response.status);
         const error = new Error('Failed to parse response from server');
         error.response = { status: response.status, data: { message: 'Invalid server response' } };
         throw error;
       }
 
       if (!response.ok) {
-        const error = new Error(data.message || 'Failed to fetch membership status');
+        console.error('Membership check failed:', response.status, data);
+        const error = new Error(data.message || data.error || 'Failed to fetch membership status');
         error.response = { status: response.status, data: data };
         throw error;
       }
@@ -266,16 +283,25 @@ const ChatRoom = () => {
         // Request was canceled, ignore
         return;
       }
-      if (err.response?.status === 404) {
+      if (err.name === 'AbortError') {
+        // Request was aborted, ignore
+        return;
+      }
+      console.error('Membership check error:', err);
+      if (err.response?.status === 401) {
+        showToastError("Session expired. Please log in again");
+        navigate("/Signin");
+      } else if (err.response?.status === 404) {
         showToastError("Chat room not found");
         navigate("/Chat");
       } else if (err.response?.status === 403) {
         showToastError("You are not a member of this chat room");
         navigate("/Chat");
+      } else if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+        showToastError("Network error. Please check your connection");
       } else {
         // Handle null chatroom or malformed response
-        showToastError("Failed to check membership");
-        navigate("/Chat");
+        showToastError(err.message || "Failed to check membership");
       }
     } finally {
       membershipControllerRef.current = null;
@@ -283,8 +309,10 @@ const ChatRoom = () => {
   }, [userId, navigate]);
 
   useEffect(() => {
-    checkMembership(currentChatId);
-  }, [currentChatId, checkMembership]);
+    if (currentChatId && userId) {
+      checkMembership(currentChatId);
+    }
+  }, [currentChatId, userId, checkMembership]);
 
   // Single socket
   const [socket, setSocket] = useState(null);
@@ -361,15 +389,24 @@ const ChatRoom = () => {
   }, [currentChatId]);
 
   useEffect(() => {
+    if (!userId) {
+      console.warn('Socket.IO: userId not available, skipping connection');
+      return;
+    }
+
+    console.log("Attempting Socket.IO connection with userId:", userId);
     const socketInstance = io(`${API_BASE_URL}`, {
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Add polling as fallback
       auth: { userId: userId },
       withCredentials: true, // Send cookies with socket connection
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
     });
 
-    console.log("Attempting Socket.IO connection with userId:", userId); // Add this line
-
     socketInstance.on("connect", () => {
+      console.log("Socket.IO connected successfully");
       // Join current room if exists
       if (urlChatId) {
         socketInstance.emit("joinRoom", urlChatId);
@@ -377,10 +414,13 @@ const ChatRoom = () => {
     });
 
     socketInstance.on("connect_error", (error) => {
-      showToastError("Failed to connect to chat server");
+      console.error("Socket.IO connection error:", error);
+      // Don't show error toast on every connection attempt to avoid spam
+      // The socket will auto-retry
     });
 
     socketInstance.on("disconnect", (reason) => {
+      console.log("Socket.IO disconnected:", reason);
     });
 
     socketInstance.on("join-request-handled", (data) => {
@@ -399,7 +439,10 @@ const ChatRoom = () => {
 
     setSocket(socketInstance);
 
-    return () => socketInstance.disconnect();
+    return () => {
+      console.log("Cleaning up Socket.IO connection");
+      socketInstance.disconnect();
+    };
   }, [userId, urlChatId, navigate]);
 
   useEffect(() => {
@@ -513,12 +556,23 @@ const ChatRoom = () => {
   }, [chats, activeFilter, searchTerm]);
 
   const handleSendMessage = async (replyToMessage = null) => {
-    if (!newMessage.trim() || !currentChatId) return;
+    if (!newMessage.trim() || !currentChatId || isSending) return;
+
+    // Store message content before clearing input
+    const messageContent = newMessage.trim();
+    
+    // Clear input immediately for better UX
+    setNewMessage("");
+    if (replyToMessage) {
+      setReplyingTo(null);
+    }
+    
+    setIsSending(true);
 
     try {
       const response = await axios.post(
         `${API_BASE_URL}/rooms/${currentChatId}/messages`,
-        { text: newMessage, userId: userId, replyToId: replyToMessage?.id }
+        { text: messageContent, userId: userId, replyToId: replyToMessage?.id }
       );
       const savedMessage = response.data;
       savedMessage.fromUser = true;
@@ -562,18 +616,19 @@ const ChatRoom = () => {
         socket.emit("send-message", messageToSend, currentChatId);
       }
 
-      setNewMessage("");
-      if (replyToMessage) {
-        setReplyingTo(null);
-      }
-
       const updated = chats.map((chat) =>
         chat.id === currentChatId
-          ? { ...chat, lastMessage: `You: ${newMessage}`, time: "now" }
+          ? { ...chat, lastMessage: `You: ${messageContent}`, time: "now" }
           : chat
       );
       setChats(updated);
     } catch (error) {
+      // Restore message on error
+      setNewMessage(messageContent);
+      if (replyToMessage) {
+        setReplyingTo(replyToMessage);
+      }
+      
       if (error.response?.status === 404) {
         showToastError("Chat room not found");
       } else if (error.response?.status === 403) {
@@ -581,6 +636,8 @@ const ChatRoom = () => {
       } else {
         showToastError(error.response?.data?.error || "Error sending message");
       }
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -1221,6 +1278,7 @@ const ChatRoom = () => {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         onSendMessage={handleSendMessage}
+        isSending={isSending}
         messageContainerRef={messageContainerRef}
         toggleSidebar={toggleSidebar}
         toggleChatInfo={toggleChatInfo}
@@ -1250,28 +1308,30 @@ const ChatRoom = () => {
 
   if (showWaitingApproval && invitedChatDetails) {
     return (
-      <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors">
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
           {showSidebar && (
-          <Sidebar
-            chats={filteredChats}
-            originalChats={chats}
-            setOriginalChats={setChats}
-            currentChatId={currentChatId}
-            onChatClick={handleChatClick}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
-            onNewChat={() => setIsNewChatModalOpen(true)}
-            onBackToChats={handleBackToChats}
-            onBackToHome={onBackToHome}
-            onJoinViaLink={() => setShowJoinViaLinkModal(true)}
-            onDeleteChat={handleDeleteChat}
-            isAdmin={chatAdmins[currentChatId] === userId}
-            currentUserId={userId}
-            chatAdmins={chatAdmins}
-          />
+            <div className="absolute md:relative inset-0 md:inset-auto z-50 md:z-auto">
+              <Sidebar
+                chats={filteredChats}
+                originalChats={chats}
+                setOriginalChats={setChats}
+                currentChatId={currentChatId}
+                onChatClick={handleChatClick}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                activeFilter={activeFilter}
+                setActiveFilter={setActiveFilter}
+                onNewChat={() => setIsNewChatModalOpen(true)}
+                onBackToChats={handleBackToChats}
+                onBackToHome={onBackToHome}
+                onJoinViaLink={() => setShowJoinViaLinkModal(true)}
+                onDeleteChat={handleDeleteChat}
+                isAdmin={chatAdmins[currentChatId] === userId}
+                currentUserId={userId}
+                chatAdmins={chatAdmins}
+              />
+            </div>
           )}
           <WaitingApproval chatName={invitedChatDetails.name} />
         </div>
@@ -1281,28 +1341,30 @@ const ChatRoom = () => {
 
   if (showJoinRequest && invitedChatDetails) {
     return (
-      <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors">
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
           {showSidebar && (
-          <Sidebar
-            chats={filteredChats}
-            originalChats={chats}
-            setOriginalChats={setChats}
-            currentChatId={currentChatId}
-            onChatClick={handleChatClick}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
-            onNewChat={() => setIsNewChatModalOpen(true)}
-            onBackToChats={handleBackToChats}
-            onBackToHome={() => navigate('/')}
-            onJoinViaLink={() => setShowJoinViaLinkModal(true)}
-            onDeleteChat={handleDeleteChat}
-            isAdmin={chatAdmins[currentChatId] === userId}
-            currentUserId={userId}
-            chatAdmins={chatAdmins}
-          />
+            <div className="absolute md:relative inset-0 md:inset-auto z-50 md:z-auto">
+              <Sidebar
+                chats={filteredChats}
+                originalChats={chats}
+                setOriginalChats={setChats}
+                currentChatId={currentChatId}
+                onChatClick={handleChatClick}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                activeFilter={activeFilter}
+                setActiveFilter={setActiveFilter}
+                onNewChat={() => setIsNewChatModalOpen(true)}
+                onBackToChats={handleBackToChats}
+                onBackToHome={() => navigate('/')}
+                onJoinViaLink={() => setShowJoinViaLinkModal(true)}
+                onDeleteChat={handleDeleteChat}
+                isAdmin={chatAdmins[currentChatId] === userId}
+                currentUserId={userId}
+                chatAdmins={chatAdmins}
+              />
+            </div>
           )}
           <RequestJoin
             chatName={invitedChatDetails.name}
@@ -1315,10 +1377,11 @@ const ChatRoom = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors">
+    <div className="flex flex-col h-screen bg-neutral-50 dark:bg-brand-grey-dark transition-colors overflow-hidden">
       <div className="flex flex-1 overflow-hidden relative">
         {showSidebar && (
-          <Sidebar
+          <div className="absolute md:relative inset-0 md:inset-auto z-50 md:z-auto">
+            <Sidebar
             chats={filteredChats}
             originalChats={chats}
             setOriginalChats={setChats}
@@ -1337,6 +1400,7 @@ const ChatRoom = () => {
             currentUserId={userId}
             chatAdmins={chatAdmins}
           />
+          </div>
         )}
 
         {renderMainContent()}

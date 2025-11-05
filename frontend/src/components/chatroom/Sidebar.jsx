@@ -72,7 +72,7 @@ const Sidebar = ({
 
   return (
     <div
-      className={`w-80 border-r border-neutral-200 dark:border-brand-grey-light bg-white dark:bg-brand-grey-medium flex flex-col transition-colors h-full`}
+      className={`w-full md:w-80 border-r border-neutral-200 dark:border-brand-grey-light bg-white dark:bg-brand-grey-medium flex flex-col transition-colors h-full`}
     >
       {/* Sidebar Header */}
       <div className="p-4 border-b border-neutral-200 dark:border-brand-grey-light flex justify-between items-center">

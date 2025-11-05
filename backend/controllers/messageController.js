@@ -14,6 +14,13 @@ exports.createMessage = async (req, res) => {
         .json({ error: "Missing required fields (roomId, text, userId)." });
     }
 
+    // Validate text is not empty after trimming
+    if (!text.trim()) {
+      return res
+        .status(400)
+        .json({ error: "Message text cannot be empty." });
+    }
+
     // 1. Create the new message
     const newMessage = await prisma.message.create({
       data: {
@@ -57,7 +64,19 @@ exports.createMessage = async (req, res) => {
     return res.status(201).json(newMessage);
   } catch (error) {
     console.error("Error creating message:", error);
-    return res.status(500).json({ error: "Failed to create message" });
+    
+    // Provide more specific error messages
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: "Message already exists" });
+    }
+    if (error.code === 'P2003') {
+      return res.status(404).json({ error: "Chat room or user not found" });
+    }
+    
+    return res.status(500).json({ 
+      error: "Failed to create message",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
