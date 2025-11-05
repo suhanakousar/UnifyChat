@@ -6,9 +6,22 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const showTime = (timestamp) => {
+  // Handle null, undefined, or invalid timestamps
+  if (!timestamp) return "";
+  
   const sentTime = new Date(timestamp);
+  
+  // Check if date is valid
+  if (isNaN(sentTime.getTime())) {
+    return "";
+  }
+  
   const now = new Date();
   const diffInSeconds = Math.floor((now - sentTime) / 1000);
+
+  // Handle negative differences (future dates) or extremely large differences
+  if (diffInSeconds < 0) return "now";
+  if (diffInSeconds > 31536000 * 10) return ""; // More than 10 years, don't show
 
   if (diffInSeconds < 60) return "now"; // Less than 1 minute
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -18,9 +31,9 @@ const showTime = (timestamp) => {
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 30) return `${diffInDays}d`; // Less than 1 month
   const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return `${diffInMonths}m`; // Less than 1 year
+  if (diffInMonths < 12) return `${diffInMonths}mo`; // Less than 1 year (use 'mo' to distinguish from minutes)
   const diffInYears = Math.floor(diffInMonths / 12);
-  return `${diffInYears} y`; // More than 1 year
+  return `${diffInYears}y`; // More than 1 year
 };
 
 const Sidebar = ({
@@ -167,9 +180,11 @@ const Sidebar = ({
                   <span className="font-['Montserrat'] font-semibold text-brand-grey-dark dark:text-brand-white truncate">
                     {chat.name}
                   </span>
-                  <span className="font-['Inter'] text-neutral-500 dark:text-neutral-400 text-xs ml-2 flex-shrink-0">
-                    {showTime(chat.updated_at)}
-                  </span>
+                  {chat.updated_at && (
+                    <span className="font-['Inter'] text-neutral-500 dark:text-neutral-400 text-xs ml-2 flex-shrink-0">
+                      {showTime(chat.updated_at)}
+                    </span>
+                  )}
                 </div>
                 <p className="font-['Inter'] text-neutral-600 dark:text-neutral-400 text-sm truncate">
                   {chat.last_message}
